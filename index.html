@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>回忆夹 - AI记忆助手</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#0f0f23;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 0}
+.demo-title{color:#fff;font-size:16px;font-weight:600;margin-bottom:12px;text-align:center}
+.demo-sub{color:#8888aa;font-size:12px;margin-bottom:16px;text-align:center}
+.phone{width:390px;height:844px;background:#000;border-radius:48px;padding:11px;box-shadow:0 0 0 2px #222,0 20px 60px rgba(0,0,0,.5);position:relative;flex-shrink:0}
+.phone::before{content:'';position:absolute;top:11px;left:50%;transform:translateX(-50%);width:150px;height:32px;background:#000;border-radius:0 0 18px 18px;z-index:10}
+.screen{width:100%;height:100%;background:#fff;border-radius:38px;overflow:hidden;position:relative}
+.page{position:absolute;top:0;left:0;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:#fff;display:none;-webkit-overflow-scrolling:touch}
+.page.active{display:block}
+
+/* ===== 底部导航 ===== */
+.tab-bar{position:absolute;bottom:0;left:0;right:0;height:83px;background:#fff;border-top:0.5px solid rgba(0,0,0,.06);display:flex;justify-content:space-around;align-items:flex-start;padding-top:6px;z-index:100;padding-bottom:28px}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:2px 10px;position:relative}
+.tab-icon{width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+.tab-icon svg{width:100%;height:100%}
+.tab-label{font-size:10px;color:#999;font-weight:500;margin-top:1px}
+.tab-item.active .tab-label{color:#000;font-weight:600}
+.tab-item.active .tab-icon svg{stroke:#000}
+.tab-publish{width:48px;height:48px;background:#FF2442;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-top:-6px;box-shadow:0 2px 8px rgba(255,36,66,.3)}
+.tab-publish svg{width:24px;height:24px}
+.tab-badge{position:absolute;top:-2px;right:2px;min-width:16px;height:16px;background:#FF2442;border-radius:8px;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.tab-dot{position:absolute;top:-2px;right:6px;width:8px;height:8px;background:#FF2442;border-radius:50%}
+
+/* ===== 发现页 ===== */
+.discover-top{position:sticky;top:0;z-index:50;background:#fff}
+.discover-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 4px;height:48px}
+.discover-nav-left,.discover-nav-right{width:40px;display:flex;align-items:center}
+.discover-nav-center{display:flex;align-items:center;gap:24px;flex:1;justify-content:center}
+.nav-tab{font-size:16px;color:#999;font-weight:500;position:relative;padding-bottom:6px}
+.nav-tab.active{color:#333;font-weight:600}
+.nav-tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:20px;height:3px;background:#FF2442;border-radius:2px}
+.nav-tab-badge{position:absolute;top:-8px;right:-14px;min-width:16px;height:16px;background:#FF2442;border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:600}
+.discover-subnav{display:flex;align-items:center;padding:0 4px;height:40px;overflow-x:auto;scrollbar-width:none}
+.discover-subnav::-webkit-scrollbar{display:none}
+.subnav-item{font-size:14px;color:#666;padding:0 12px;white-space:nowrap;font-weight:400}
+.subnav-item.active{color:#333;font-weight:600}
+.subnav-arrow{padding:0 12px;display:flex;align-items:center}
+.waterfall{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 8px 100px}
+.note-card{background:#fff;border-radius:12px;overflow:hidden;cursor:pointer;break-inside:avoid}
+.note-card-img{width:100%;position:relative;background:#f0f0f0;overflow:hidden}
+.note-card-img img{width:100%;display:block;object-fit:cover}
+.note-card-info{padding:8px 8px 10px}
+.note-card-title{font-size:13px;color:#333;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.note-card-meta{display:flex;align-items:center;justify-content:space-between}
+.note-card-author{display:flex;align-items:center;gap:4px}
+.note-card-avatar{width:16px;height:16px;border-radius:50%}
+.note-card-name{font-size:11px;color:#999;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note-card-likes{display:flex;align-items:center;gap:2px;font-size:11px;color:#999}
+
+/* ===== 笔记详情页 ===== */
+.note-hero{width:100%;height:480px;background:#f5f5f5;position:relative}
+.note-hero img{width:100%;height:100%;object-fit:cover}
+.note-back{position:absolute;top:52px;left:12px;width:36px;height:36px;background:rgba(0,0,0,.35);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(4px)}
+.note-content{padding:16px 16px 80px}
+.note-content-title{font-size:17px;font-weight:600;color:#333;line-height:1.5;margin-bottom:10px}
+.note-content-body{font-size:14px;color:#333;line-height:1.7;margin-bottom:14px}
+.note-content-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.note-content-tag{background:#f5f5f5;color:#666;font-size:13px;padding:6px 12px;border-radius:14px}
+.note-author-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:0.5px solid #f0f0f0;border-bottom:0.5px solid #f0f0f0}
+.note-author-left{display:flex;align-items:center;gap:10px}
+.note-author-avatar{width:40px;height:40px;border-radius:50%}
+.note-author-info{display:flex;flex-direction:column;gap:2px}
+.note-author-name{font-size:14px;font-weight:600;color:#333}
+.note-author-desc{font-size:12px;color:#999}
+.note-follow-btn{background:#FF2442;color:#fff;border:none;padding:7px 18px;border-radius:16px;font-size:13px;font-weight:600;cursor:pointer}
+.note-follow-btn.following{background:#f5f5f5;color:#999}
+.note-bottom{position:absolute;bottom:0;left:0;right:0;height:52px;background:#fff;border-top:0.5px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:60}
+.note-bottom-group{display:flex;gap:20px}
+.note-bottom-item{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
+.note-bottom-item span{font-size:9px;color:#999}
+.note-collect-btn{background:#FF2442;color:#fff;border:none;padding:9px 28px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+
+/* ===== 收藏弹窗 ===== */
+.sheet-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:200;display:none;opacity:0;transition:opacity .3s}
+.sheet-overlay.show{display:block;opacity:1}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:12px 20px 28px;z-index:201;transform:translateY(100%);transition:transform .35s cubic-bezier(.25,.46,.45,.94)}
+.sheet.show{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:600;text-align:center;margin-bottom:16px}
+.intent-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.intent-item{border:1.5px solid #eee;border-radius:14px;padding:14px;text-align:center;cursor:pointer;transition:all .2s}
+.intent-item.selected{border-color:#FF2442;background:rgba(255,36,66,.04)}
+.intent-emoji{font-size:26px;margin-bottom:4px}
+.intent-name{font-size:13px;color:#333;font-weight:500}
+.intent-desc{font-size:11px;color:#999;margin-top:2px}
+.sheet-subtitle{font-size:13px;color:#666;margin-bottom:8px}
+.time-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.time-chip{border:1px solid #eee;padding:7px 16px;border-radius:16px;font-size:13px;color:#666;cursor:pointer;transition:all .2s}
+.time-chip.selected{border-color:#FF2442;color:#FF2442;background:rgba(255,36,66,.04)}
+.sheet-confirm{width:100%;background:#FF2442;color:#fff;border:none;padding:13px;border-radius:24px;font-size:15px;font-weight:600;cursor:pointer}
+.sheet-confirm:disabled{background:#ccc;cursor:not-allowed}
+
+/* ===== AI处理页 ===== */
+.ai-page{background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:40px}
+.ai-orb{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,100,150,.8),rgba(100,80,200,.6),rgba(50,50,150,.4));box-shadow:0 0 50px rgba(120,80,220,.5);animation:orbPulse 2.5s ease-in-out infinite;margin-bottom:28px;position:relative}
+.ai-orb::after{content:'';position:absolute;inset:-16px;border-radius:50%;border:1px solid rgba(255,255,255,.1);animation:orbRing 3s ease-in-out infinite}
+@keyframes orbPulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
+@keyframes orbRing{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.15);opacity:.1}}
+.ai-title{font-size:18px;font-weight:600;margin-bottom:6px}
+.ai-subtitle{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:36px}
+.ai-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:280px}
+.ai-tag{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);padding:6px 14px;border-radius:18px;font-size:12px;opacity:0;transform:translateY(8px);animation:tagReveal .4s ease forwards}
+@keyframes tagReveal{to{opacity:1;transform:translateY(0)}}
+.ai-bar{position:absolute;bottom:76px;left:40px;right:40px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.ai-bar-inner{height:100%;background:linear-gradient(90deg,#FF2442,#ff6b8a);width:0;animation:barFill 2.5s ease forwards}
+@keyframes barFill{to{width:100%}}
+
+/* ===== 个人主页 ===== */
+.profile-page{background:#fff}
+.profile-header{position:relative;min-height:300px}
+.profile-header-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center 75%;filter:brightness(.6)}
+.profile-header-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.3) 0%,rgba(0,0,0,.5) 100%)}
+.profile-header-top{display:flex;align-items:center;justify-content:space-between;padding:52px 16px 0;position:relative;z-index:2}
+.profile-header-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#fff}
+.profile-header-center{display:flex;align-items:center;gap:8px}
+.profile-edit-btn{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);padding:6px 14px;border-radius:16px;color:#fff;font-size:13px;border:none;cursor:pointer}
+.profile-info{position:relative;z-index:2;padding:0 20px 24px;margin-top:-10px}
+.profile-avatar-row{display:flex;align-items:flex-end;gap:12px;margin-bottom:4px}
+.profile-avatar{width:72px;height:72px;border-radius:50%;border:2px solid #fff;object-fit:cover;background:#ddd}
+.profile-name-row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.profile-name{font-size:18px;color:#fff;font-weight:600}
+.profile-arrow{color:#fff;font-size:12px}
+.profile-id{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:6px}
+.profile-stats{display:flex;gap:20px;margin-bottom:6px}
+.profile-stat{display:flex;align-items:baseline;gap:4px}
+.profile-stat-num{font-size:18px;color:#fff;font-weight:700}
+.profile-stat-label{font-size:13px;color:rgba(255,255,255,.8)}
+.profile-bio{font-size:14px;color:rgba(255,255,255,.85);margin-bottom:4px}
+.profile-gender{width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;margin-bottom:8px}
+.profile-actions{display:flex;gap:10px}
+.profile-action-card{flex:1;background:rgba(0,0,0,.25);backdrop-filter:blur(10px);border-radius:12px;padding:8px;color:#fff}
+.profile-action-icon{font-size:18px;margin-bottom:4px}
+.profile-action-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.profile-action-desc{font-size:11px;color:rgba(255,255,255,.7)}
+
+/* 回忆夹入口 */
+.memory-entry{background:linear-gradient(135deg,#FF2442,#ff6b8a);border-radius:14px;padding:16px;margin:14px 20px;color:#fff;cursor:pointer;position:relative;overflow:hidden}
+.memory-entry::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.1);border-radius:50%}
+.memory-entry-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;position:relative;z-index:1}
+.memory-entry-title{font-size:16px;font-weight:700}
+.memory-entry-badge{background:rgba(255,255,255,.25);padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600}
+.memory-entry-desc{font-size:13px;opacity:.9;margin-bottom:10px;position:relative;z-index:1}
+.memory-entry-stats{display:flex;gap:16px;position:relative;z-index:1}
+.memory-entry-stat{display:flex;align-items:baseline;gap:3px}
+.memory-entry-num{font-size:20px;font-weight:700}
+.memory-entry-label{font-size:12px;opacity:.85}
+
+.profile-content{background:#fff;border-radius:20px 20px 0 0;margin-top:-16px;position:relative;z-index:3;padding-top:4px}
+.profile-tabs{display:flex;align-items:center;border-bottom:0.5px solid #f0f0f0;padding:0 8px}
+.profile-tab{flex:1;text-align:center;padding:12px 0;font-size:14px;color:#666;font-weight:400;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+.profile-tab.active{color:#333;font-weight:600}
+.profile-tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:20px;height:3px;background:#FF2442;border-radius:2px}
+.profile-tab svg{width:14px;height:14px}
+.profile-subtabs{display:flex;padding:12px 16px;gap:20px;border-bottom:0.5px solid #f5f5f5}
+.profile-subtab{font-size:14px;color:#666;cursor:pointer}
+.profile-subtab.active{color:#333;font-weight:600}
+.profile-waterfall{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 8px 100px}
+
+/* ===== 回忆夹主页 ===== */
+.memory-page{background:#f8f8f8;padding-bottom:100px}
+.memory-top{position:sticky;top:0;z-index:50;background:#fff;padding:50px 16px 12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.memory-top-title{font-size:18px;font-weight:700}
+.memory-top-right{display:flex;gap:12px}
+.memory-top-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+.memory-greeting{padding:16px 16px 4px}
+.memory-greeting-text{font-size:22px;font-weight:700;color:#333;margin-bottom:4px}
+.memory-greeting-sub{font-size:14px;color:#999}
+
+/* 统计卡片 */
+.memory-stats{display:flex;gap:10px;padding:12px 16px}
+.memory-stat-card{flex:1;background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.memory-stat-num{font-size:24px;font-weight:700;color:#FF2442;margin-bottom:2px}
+.memory-stat-label{font-size:12px;color:#666}
+
+/* 分类 */
+.memory-cats{display:flex;gap:10px;padding:8px 16px 16px;overflow-x:auto;scrollbar-width:none}
+.memory-cats::-webkit-scrollbar{display:none}
+.memory-cat{min-width:80px;background:#fff;border-radius:14px;padding:14px 12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.04);cursor:pointer}
+.memory-cat-emoji{font-size:28px;margin-bottom:4px}
+.memory-cat-name{font-size:13px;font-weight:500}
+.memory-cat-count{font-size:11px;color:#999;margin-top:2px}
+
+/* 智能洞察 */
+.memory-insight{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:16px;margin:0 16px 16px;color:#fff}
+.memory-insight-header{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:14px;font-weight:600}
+.memory-insight-text{font-size:13px;line-height:1.6;opacity:.9}
+.memory-insight-action{margin-top:10px;background:rgba(255,255,255,.15);border:none;padding:8px 16px;border-radius:12px;color:#fff;font-size:13px;cursor:pointer}
+
+/* 待唤醒 */
+.memory-wake-banner{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;padding:16px;margin:0 16px 16px;color:#fff;cursor:pointer}
+.memory-wake-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.memory-wake-desc{font-size:12px;opacity:.85}
+
+/* 记忆列表 */
+.memory-section-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px}
+.memory-section-title{font-size:16px;font-weight:600}
+.memory-section-more{font-size:13px;color:#999}
+.memory-list{padding:0 16px}
+.memory-item{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.04);display:flex;gap:12px;cursor:pointer}
+.memory-item-img{width:80px;height:80px;border-radius:10px;object-fit:cover;background:#f0f0f0;flex-shrink:0}
+.memory-item-body{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.memory-item-title{font-size:14px;font-weight:600;color:#333;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.memory-item-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.memory-item-tag{background:#f0f0f0;color:#666;font-size:11px;padding:3px 10px;border-radius:10px}
+.memory-item-tag.highlight{background:rgba(255,36,66,.08);color:#FF2442}
+.memory-item-meta{display:flex;align-items:center;justify-content:space-between}
+.memory-item-time{font-size:12px;color:#999}
+.memory-item-action{font-size:12px;color:#FF2442;font-weight:500}
+
+/* 底部搜索 */
+.memory-search-bar{position:fixed;bottom:90px;left:16px;right:16px;height:48px;background:#fff;border-radius:24px;display:flex;align-items:center;padding:0 16px;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:90;max-width:358px;margin:0 auto}
+.memory-search-bar svg{flex-shrink:0}
+.memory-search-bar input{border:none;background:transparent;font-size:14px;outline:none;width:100%}
+.memory-search-bar input::placeholder{color:#999}
+
+/* ===== 搜索页 ===== */
+.search-page{padding:50px 16px 20px;background:#fff}
+.search-top{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.search-box{flex:1;display:flex;align-items:center;background:#F5F5F5;border-radius:18px;padding:10px 14px;gap:8px}
+.search-box input{border:none;background:transparent;font-size:14px;outline:none;width:100%}
+.search-cancel{font-size:14px;color:#333;cursor:pointer}
+.search-section{margin-bottom:20px}
+.search-section-title{font-size:13px;color:#999;margin-bottom:10px}
+.search-chips{display:flex;flex-wrap:wrap;gap:8px}
+.search-chip{background:#f5f5f5;padding:8px 16px;border-radius:16px;font-size:13px;color:#555;cursor:pointer}
+
+/* ===== 结果页 ===== */
+.result-page{padding:50px 16px 20px;background:#fafafa}
+.result-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.result-back{cursor:pointer;padding:4px}
+.result-query{font-size:16px;font-weight:600}
+.result-insight{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:16px;color:#fff;margin-bottom:14px}
+.result-insight-title{font-size:14px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.result-insight-text{font-size:13px;line-height:1.6;opacity:.9}
+.result-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px}
+.result-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.result-card-title{font-size:14px;font-weight:600}
+.result-match{background:rgba(255,36,66,.08);color:#FF2442;font-size:11px;padding:3px 10px;border-radius:10px;font-weight:500}
+.result-card-desc{font-size:13px;color:#666;line-height:1.5}
+
+/* ===== 唤醒页 ===== */
+.wake-page{padding:50px 16px 20px;background:linear-gradient(180deg,#f0f0ff 0%,#fafaff 100%)}
+.wake-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.wake-top h2{font-size:20px;font-weight:700}
+.wake-weather{display:flex;align-items:center;gap:4px;background:#fff;padding:6px 12px;border-radius:16px;font-size:13px}
+.wake-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.wake-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.wake-card-icon{font-size:28px}
+.wake-card-title{font-size:15px;font-weight:600}
+.wake-card-sub{font-size:12px;color:#999}
+.wake-card-body{font-size:13px;color:#555;line-height:1.6}
+.wake-card-btn{margin-top:10px;background:#FF2442;color:#fff;border:none;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer}
+.wake-back{position:absolute;top:52px;left:12px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10}
+
+@media(max-width:430px){body{padding:0;background:#fff}.demo-title,.demo-sub{display:none}.phone{width:100vw;height:100vh;border-radius:0;padding:0;box-shadow:none}.phone::before{display:none}.screen{border-radius:0}}
+</style>
+</head>
+<body>
+<div class="demo-title">回忆夹 - AI 记忆助手 Demo</div>
+<div class="demo-sub">基于小红书框架的交互原型</div>
+
+<div class="phone">
+<div class="screen">
+
+<!-- ===== 发现页 ===== -->
+<div class="page active" id="page-discover">
+  <div class="discover-top">
+    <div class="discover-nav">
+      <div class="discover-nav-left" onclick="alert('消息功能演示')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      </div>
+      <div class="discover-nav-center">
+        <div class="nav-tab">关注<span class="nav-tab-badge">12</span></div>
+        <div class="nav-tab active">发现</div>
+        <div class="nav-tab">北京</div>
+      </div>
+      <div class="discover-nav-right" onclick="goSearch('discover')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </div>
+    </div>
+    <div class="discover-subnav">
+      <div class="subnav-item active">推荐</div>
+      <div class="subnav-item">RED</div>
+      <div class="subnav-item">直播</div>
+      <div class="subnav-item">短剧</div>
+      <div class="subnav-item">经验</div>
+      <div class="subnav-item">穿搭</div>
+      <div class="subnav-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </div>
+  </div>
+  <div class="waterfall" id="waterfall"></div>
+</div>
+
+<!-- ===== 笔记详情页 ===== -->
+<div class="page" id="page-note">
+  <div class="note-hero">
+    <img id="note-hero-img" src="" alt="">
+    <div class="note-back" onclick="backFromNote()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+  </div>
+  <div class="note-content">
+    <div class="note-content-title" id="note-content-title"></div>
+    <div class="note-content-body" id="note-content-body"></div>
+    <div class="note-content-tags" id="note-content-tags"></div>
+    <div id="note-ai-section" style="display:none;margin-bottom:16px;padding:14px;background:#fafafa;border-radius:12px">
+      <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px">🤖 AI 记忆标签</div>
+      <div id="note-ai-tags" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div id="note-ai-time" style="margin-top:8px;font-size:12px;color:#999"></div>
+    </div>
+    <div class="note-author-bar">
+      <div class="note-author-left">
+        <img class="note-author-avatar" id="note-author-avatar" src="">
+        <div class="note-author-info">
+          <span class="note-author-name" id="note-author-name"></span>
+          <span class="note-author-desc">小红书博主</span>
+        </div>
+      </div>
+      <button class="note-follow-btn" id="note-follow-btn" onclick="toggleFollow()">关注</button>
+    </div>
+  </div>
+  <div class="note-bottom">
+    <div class="note-bottom-group">
+      <div class="note-bottom-item" onclick="alert('点赞功能演示')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <span>赞</span>
+      </div>
+      <div class="note-bottom-item" onclick="alert('评论功能演示')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        <span>评论</span>
+      </div>
+      <div class="note-bottom-item" onclick="alert('分享功能演示')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+        <span>分享</span>
+      </div>
+    </div>
+    <button class="note-collect-btn" id="note-collect-btn" onclick="openSheet()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span id="note-collect-text">收藏</span>
+    </button>
+  </div>
+</div>
+
+<!-- ===== AI处理页 ===== -->
+<div class="page ai-page" id="page-ai">
+  <div class="ai-orb"></div>
+  <div class="ai-title">AI 正在理解你的收藏...</div>
+  <div class="ai-subtitle">回忆夹会提取关键信息，生成结构化记忆</div>
+  <div class="ai-tags" id="ai-tags"></div>
+  <div class="ai-bar"><div class="ai-bar-inner"></div></div>
+</div>
+
+<!-- ===== 个人主页 ===== -->
+<div class="page profile-page" id="page-profile">
+  <div class="profile-header">
+    <img class="profile-header-bg" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop" alt="">
+    <div class="profile-header-overlay"></div>
+    <div class="profile-header-top">
+      <div class="profile-header-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+      <div class="profile-header-center">
+        <button class="profile-edit-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>编辑主页</button>
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="profile-header-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+        <div class="profile-header-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></div>
+      </div>
+    </div>
+    <div class="profile-info">
+      <div class="profile-avatar-row">
+        <img class="profile-avatar" src="avatar.png" alt="">
+      </div>
+      <div class="profile-name-row">
+        <span class="profile-name">Skylar</span>
+        <span class="profile-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+      <div class="profile-id">小红书号：123456</div>
+      <div class="profile-stats">
+        <div class="profile-stat"><span class="profile-stat-num">128</span><span class="profile-stat-label">关注</span></div>
+        <div class="profile-stat"><span class="profile-stat-num">36</span><span class="profile-stat-label">粉丝</span></div>
+        <div class="profile-stat"><span class="profile-stat-num">520</span><span class="profile-stat-label">获赞与收藏</span></div>
+      </div>
+      <div class="profile-bio">点击这里，填写简介</div>
+      <div class="profile-gender">♀</div>
+      <div class="profile-actions">
+        <div class="profile-action-card">
+          <div class="profile-action-icon">🕐</div>
+          <div class="profile-action-title">浏览记录</div>
+          <div class="profile-action-desc">看过的笔记</div>
+        </div>
+        <div class="profile-action-card">
+          <div class="profile-action-icon">📝</div>
+          <div class="profile-action-title">RED创作...</div>
+          <div class="profile-action-desc">为新生代好作品...</div>
+        </div>
+        <div class="profile-action-card">
+          <div class="profile-action-icon">👥</div>
+          <div class="profile-action-title">群聊</div>
+          <div class="profile-action-desc">查看详情</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="profile-content">
+    <!-- 回忆夹入口 -->
+    <div class="memory-entry" onclick="goMemory()">
+      <div class="memory-entry-top">
+        <span class="memory-entry-title">🤖 回忆夹</span>
+        <span class="memory-entry-badge">AI 整理中</span>
+      </div>
+      <div class="memory-entry-desc">你的 AI 记忆助手，让收藏不再吃灰</div>
+      <div class="memory-entry-stats">
+        <div class="memory-entry-stat"><span class="memory-entry-num">23</span><span class="memory-entry-label">条记忆</span></div>
+        <div class="memory-entry-stat"><span class="memory-entry-num">5</span><span class="memory-entry-label">个分类</span></div>
+        <div class="memory-entry-stat"><span class="memory-entry-num">2</span><span class="memory-entry-label">条待唤醒</span></div>
+      </div>
+    </div>
+    <div class="profile-tabs">
+      <div class="profile-tab" onclick="switchProfileTab('notes')">笔记</div>
+      <div class="profile-tab" onclick="switchProfileTab('comments')">🔒 评论</div>
+      <div class="profile-tab active" onclick="switchProfileTab('collect')">🔒 收藏</div>
+      <div class="profile-tab" onclick="switchProfileTab('likes')">🔒 赞过</div>
+      <div class="profile-tab" style="flex:0.5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+    </div>
+    <div class="profile-subtabs">
+      <div class="profile-subtab active">笔记 662</div>
+      <div class="profile-subtab">专辑 0</div>
+      <div class="profile-subtab">地点 1</div>
+      <div class="profile-subtab">文件 5</div>
+    </div>
+    <div class="profile-waterfall" id="profile-waterfall"></div>
+  </div>
+</div>
+
+<!-- ===== 回忆夹主页 ===== -->
+<div class="page memory-page" id="page-memory">
+  <div class="memory-top">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="memory-top-btn" onclick="backToProfile()" style="margin-left:-8px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="memory-top-title">回忆夹</div>
+    </div>
+    <div class="memory-top-right">
+      <div class="memory-top-btn" onclick="goSearch()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+      <div class="memory-top-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
+    </div>
+  </div>
+  <div class="memory-greeting">
+    <div class="memory-greeting-text">👋 早安，Skylar</div>
+    <div class="memory-greeting-sub">今天有 2 条记忆待唤醒</div>
+  </div>
+  <div class="memory-stats">
+    <div class="memory-stat-card">
+      <div class="memory-stat-num">23</div>
+      <div class="memory-stat-label">共收藏</div>
+    </div>
+    <div class="memory-stat-card">
+      <div class="memory-stat-num">18</div>
+      <div class="memory-stat-label">已整理</div>
+    </div>
+    <div class="memory-stat-card">
+      <div class="memory-stat-num">3</div>
+      <div class="memory-stat-label">待唤醒</div>
+    </div>
+  </div>
+  <div class="memory-cats">
+    <div class="memory-cat"><div class="memory-cat-emoji">🍳</div><div class="memory-cat-name">美食</div><div class="memory-cat-count">7 条</div></div>
+    <div class="memory-cat"><div class="memory-cat-emoji">✈️</div><div class="memory-cat-name">旅行</div><div class="memory-cat-count">5 条</div></div>
+    <div class="memory-cat"><div class="memory-cat-emoji">💄</div><div class="memory-cat-name">美妆</div><div class="memory-cat-count">4 条</div></div>
+    <div class="memory-cat"><div class="memory-cat-emoji">🏠</div><div class="memory-cat-name">家居</div><div class="memory-cat-count">3 条</div></div>
+    <div class="memory-cat"><div class="memory-cat-emoji">📚</div><div class="memory-cat-name">学习</div><div class="memory-cat-count">4 条</div></div>
+    <div class="memory-cat" onclick="alert('创建新分类演示')" style="border:1.5px dashed #ddd;background:transparent"><div class="memory-cat-emoji">➕</div><div class="memory-cat-name">创建</div><div class="memory-cat-count">新分类</div></div>
+  </div>
+  <div class="memory-insight">
+    <div class="memory-insight-header">💡 智能洞察</div>
+    <div class="memory-insight-text">你近期收藏了 3 家日式餐厅，都标记了"本周末"，建议提前预约。另外你收藏的生日礼物清单中的香薰蜡烛正在打折。</div>
+    <button class="memory-insight-action" onclick="goWake()">查看唤醒提醒 →</button>
+  </div>
+  <div class="memory-wake-banner" onclick="goWake()">
+    <div class="memory-wake-title">🔔 待唤醒记忆（2）</div>
+    <div class="memory-wake-desc">今天有雨 → 日式拉面店 | 好友生日倒计时 5 天 → 礼物清单</div>
+  </div>
+  <div class="memory-section-header">
+    <span class="memory-section-title">最近收藏</span>
+    <span class="memory-section-more">查看全部 ></span>
+  </div>
+  <div class="memory-list" id="memory-list"></div>
+  <div class="memory-search-bar" onclick="goSearch()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" placeholder="用自然语言搜索你的记忆..." readonly>
+  </div>
+</div>
+
+<!-- ===== 搜索页 ===== -->
+<div class="page search-page" id="page-search">
+  <div class="search-top">
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="搜索记忆..." id="search-input" onkeydown="if(event.key==='Enter')doSearch()">
+    </div>
+    <span class="search-cancel" onclick="backToMemory()">取消</span>
+  </div>
+  <div class="search-section">
+    <div class="search-section-title">试试这样说</div>
+    <div class="search-chips">
+      <div class="search-chip" onclick="quickSearch('周末约会吃什么')">周末约会吃什么</div>
+      <div class="search-chip" onclick="quickSearch('适合送女朋友的礼物')">适合送女朋友的礼物</div>
+      <div class="search-chip" onclick="quickSearch('上海短途旅行')">上海短途旅行</div>
+      <div class="search-chip" onclick="quickSearch('显白的口红色号')">显白的口红色号</div>
+    </div>
+  </div>
+  <div class="search-section">
+    <div class="search-section-title">最近搜索</div>
+    <div class="search-chips">
+      <div class="search-chip" onclick="quickSearch('火锅推荐')">火锅推荐</div>
+      <div class="search-chip" onclick="quickSearch('日系穿搭')">日系穿搭</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 结果页 ===== -->
+<div class="page result-page" id="page-result">
+  <div class="result-top">
+    <div class="result-back" onclick="backToSearch()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="result-query" id="result-query"></div>
+  </div>
+  <div class="result-insight">
+    <div class="result-insight-title">💡 AI 洞察</div>
+    <div class="result-insight-text" id="result-insight-text"></div>
+  </div>
+  <div id="result-list"></div>
+</div>
+
+<!-- ===== 唤醒页 ===== -->
+<div class="page wake-page" id="page-wake">
+  <div class="wake-back" onclick="backToMemory()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+  </div>
+  <div class="wake-top">
+    <h2>早安，Skylar</h2>
+    <div class="wake-weather">☀️ 上海 24°C</div>
+  </div>
+  <div class="wake-card">
+    <div class="wake-card-header">
+      <span class="wake-card-icon">🍜</span>
+      <div>
+        <div class="wake-card-title">今天有雨，来碗热汤面吧</div>
+        <div class="wake-card-sub">你上周收藏的「日式拉面店」· 距离 2.3km</div>
+      </div>
+    </div>
+    <div class="wake-card-body">人均 ¥68，雨天等位时间较短。你收藏时标记了"本周末"。AI 检测到今日有雨，气温 18°C，适合吃热汤面暖身。</div>
+    <button class="wake-card-btn" onclick="alert('查看地图导航演示')">🗺️ 一键导航</button>
+  </div>
+  <div class="wake-card">
+    <div class="wake-card-header">
+      <span class="wake-card-icon">🎁</span>
+      <div>
+        <div class="wake-card-title">好友生日倒计时 5 天</div>
+        <div class="wake-card-sub">你收藏的「生日礼物清单」</div>
+      </div>
+    </div>
+    <div class="wake-card-body">清单中的香薰蜡烛正在打折（原价 ¥199 → ¥129），顺丰次日达。建议提前下单避免延误。</div>
+    <button class="wake-card-btn" onclick="alert('跳转到商品页演示')">🛒 立即购买</button>
+  </div>
+  <div class="wake-card">
+    <div class="wake-card-header">
+      <span class="wake-card-icon">✈️</span>
+      <div>
+        <div class="wake-card-title">五一假期机票降价提醒</div>
+        <div class="wake-card-sub">你收藏的「京都小众旅行攻略」</div>
+      </div>
+    </div>
+    <div class="wake-card-body">上海→大阪航线降价 15%，你标记的「将来」出行计划可能提前。当前价格 ¥1,280（往返）。</div>
+    <button class="wake-card-btn" onclick="alert('查看机票演示')">✈️ 查看机票</button>
+  </div>
+</div>
+
+<!-- ===== 底部导航栏 ===== -->
+<div class="tab-bar" id="tab-bar">
+  <div class="tab-item active" data-tab="discover" onclick="switchTab('discover')">
+    <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <span class="tab-label">首页</span>
+  </div>
+  <div class="tab-item" data-tab="market" onclick="switchTab('market')">
+    <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div>
+    <span class="tab-label">市集</span>
+  </div>
+  <div class="tab-item" data-tab="publish" onclick="switchTab('publish')">
+    <div class="tab-publish"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+  </div>
+  <div class="tab-item" data-tab="message" onclick="switchTab('message')">
+    <div class="tab-icon" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg><span class="tab-badge">32</span></div>
+    <span class="tab-label">消息</span>
+  </div>
+  <div class="tab-item" data-tab="profile" onclick="switchTab('profile')">
+    <div class="tab-icon" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="tab-dot" id="profile-dot"></span></div>
+    <span class="tab-label">我</span>
+  </div>
+</div>
+
+<!-- ===== 收藏弹窗 ===== -->
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">选择收藏意图</div>
+  <div class="intent-grid">
+    <div class="intent-item" data-intent="plan" onclick="selectIntent(this)">
+      <div class="intent-emoji">📅</div>
+      <div class="intent-name">计划去做</div>
+      <div class="intent-desc">餐厅、景点等</div>
+    </div>
+    <div class="intent-item" data-intent="buy" onclick="selectIntent(this)">
+      <div class="intent-emoji">🛍️</div>
+      <div class="intent-name">想买</div>
+      <div class="intent-desc">商品推荐</div>
+    </div>
+    <div class="intent-item" data-intent="learn" onclick="selectIntent(this)">
+      <div class="intent-emoji">📖</div>
+      <div class="intent-name">学习参考</div>
+      <div class="intent-desc">教程干货</div>
+    </div>
+    <div class="intent-item" data-intent="inspire" onclick="selectIntent(this)">
+      <div class="intent-emoji">💡</div>
+      <div class="intent-name">灵感记录</div>
+      <div class="intent-desc">创意搭配</div>
+    </div>
+  </div>
+  <div class="sheet-subtitle">预计什么时候用到？</div>
+  <div class="time-row">
+    <div class="time-chip" data-time="today" onclick="selectTime(this)">今天</div>
+    <div class="time-chip" data-time="weekend" onclick="selectTime(this)">本周末</div>
+    <div class="time-chip" data-time="soon" onclick="selectTime(this)">近期</div>
+    <div class="time-chip" data-time="future" onclick="selectTime(this)">将来</div>
+  </div>
+  <button class="sheet-confirm" id="sheet-confirm" onclick="confirmCollect()" disabled>确认收藏</button>
+</div>
+
+</div>
+</div>
+
+<script>
+const notes=[
+  {id:1,title:"上海这家拉面店也太好吃了吧！",img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=520&fit=crop",author:"吃货小王",avatar:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",likes:"1.2k",tags:["美食","拉面","上海"],body:"位于静安区的一家日式拉面店，店面不大但是味道绝了。推荐豚骨拉面，汤底熬了12小时，叉烧入口即化。"},
+  {id:2,title:"男朋友生日送什么？这份清单拯救选择困难症",img:"https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&h=340&fit=crop",author:"礼物研究所",avatar:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",likes:"3.4k",tags:["礼物","生日","男生"],body:"整理了30款适合送男朋友的礼物，从100元到1000元各个价位都有。"},
+  {id:3,title:"京都三天两夜攻略 | 避开游客的小众路线",img:"https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&h=480&fit=crop",author:"旅行日记",avatar:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",likes:"2.1k",tags:["旅行","京都","攻略"],body:"第一次去京都不要只去清水寺！这条路线带你走街串巷。"},
+  {id:4,title:"早秋穿搭 | 小个子也能穿出高级感",img:"https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=560&fit=crop",author:"时尚日记",avatar:"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",likes:"892",tags:["穿搭","秋季","小个子"],body:"分享5套早秋look，都是基础款搭配。"},
+];
+
+const memoryNotes=[
+  {id:1,title:"上海日式拉面店",tags:[{text:"计划去做",h:true},{text:"本周末"},{text:"美食"}],img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop",author:"吃货小王",avatar:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",likes:"1.2k",body:"位于静安区的一家日式拉面店，店面不大但是味道绝了。推荐豚骨拉面，汤底熬了12小时，叉烧入口即化。",keywords:["美食","拉面","上海","餐厅","吃饭","约会","日式","周末","吃","饭","推荐"],matchDesc:"标记为\"计划去做\"，时间\"本周末\"，与搜索场景高度相关。人均 ¥68，距离 2.3km。"},
+  {id:2,title:"男朋友生日礼物清单",tags:[{text:"想买",h:true},{text:"近期"},{text:"礼物"}],img:"https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&h=300&fit=crop",author:"礼物研究所",avatar:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",likes:"3.4k",body:"整理了30款适合送男朋友的礼物，从100元到1000元各个价位都有，实用派和仪式感兼顾。",keywords:["礼物","生日","男朋友","男生","送礼","清单","女友","朋友","节日","推荐"],matchDesc:"你收藏了 5 篇礼物相关笔记，其中 2 篇标注了\"想买\"意图。清单中的香薰蜡烛正在打折。"},
+  {id:3,title:"京都小众旅行攻略",tags:[{text:"计划去做",h:true},{text:"将来"},{text:"旅行"}],img:"https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&h=300&fit=crop",author:"旅行日记",avatar:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",likes:"2.1k",body:"第一次去京都不要只去清水寺！这条路线带你走街串巷，发现真正的京都味道。",keywords:["旅行","京都","日本","攻略","短途","假期","旅游","游玩","景点","出行"],matchDesc:"标记为\"计划去做\"，时间\"将来\"。五一假期机票降价 15%，当前价格 ¥1,280（往返）。"},
+  {id:4,title:"早秋小个子穿搭",tags:[{text:"灵感记录",h:true},{text:"近期"},{text:"穿搭"}],img:"https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=300&fit=crop",author:"时尚日记",avatar:"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",likes:"892",body:"分享5套早秋look，都是基础款搭配，重点在比例和层次感。",keywords:["穿搭","秋季","小个子","衣服","时尚","口红","显白","美妆","肤色","色号"],matchDesc:"标记为\"灵感记录\"，时间\"近期\"。包含 5 套早秋 look，适合 155-160cm 身高。"},
+];
+
+let selectedIntent=null,selectedTime=null,searchSource='memory',noteSource='discover',currentNoteId=null;
+const collectedIds=new Set();
+
+function init(){
+  const wf=document.getElementById('waterfall');
+  wf.innerHTML=notes.map((n,i)=>`
+    <div class="note-card" onclick="openNote(${n.id})">
+      <div class="note-card-img" style="padding-bottom:${i%2===0?'130%':'100%'};height:0;">
+        <img src="${n.img}" style="position:absolute;top:0;left:0;width:100%;height:100%;" alt="">
+      </div>
+      <div class="note-card-info">
+        <div class="note-card-title">${n.title}</div>
+        <div class="note-card-meta">
+          <div class="note-card-author">
+            <img class="note-card-avatar" src="${n.avatar}" alt="">
+            <span class="note-card-name">${n.author}</span>
+          </div>
+          <div class="note-card-likes">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            ${n.likes}
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  initProfileWaterfall();
+  initMemoryList();
+}
+
+function initProfileWaterfall(){
+  const pw=document.getElementById('profile-waterfall');
+  if(!pw)return;
+  pw.innerHTML=memoryNotes.map((n,i)=>`
+    <div class="note-card" onclick="openMemory(${n.id})">
+      <div class="note-card-img" style="padding-bottom:${i%2===0?'120%':'100%'};height:0;">
+        <img src="${n.img}" style="position:absolute;top:0;left:0;width:100%;height:100%;" alt="">
+      </div>
+      <div class="note-card-info">
+        <div class="note-card-title">${n.title}</div>
+        <div class="note-card-meta">
+          <div class="note-card-author">
+            <img class="note-card-avatar" src="${n.avatar}" alt="">
+            <span class="note-card-name">${n.author}</span>
+          </div>
+          <div class="note-card-likes">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            ${n.likes}
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function initMemoryList(){
+  const ml=document.getElementById('memory-list');
+  if(!ml)return;
+  ml.innerHTML=memoryNotes.map(n=>`
+    <div class="memory-item" onclick="openMemory(${n.id})">
+      <img class="memory-item-img" src="${n.img}" alt="">
+      <div class="memory-item-body">
+        <div class="memory-item-title">${n.title}</div>
+        <div class="memory-item-tags">
+          ${n.tags.map(t=>`<span class="memory-item-tag ${t.h?'highlight':''}">${t.text}</span>`).join('')}
+        </div>
+        <div class="memory-item-meta">
+          <span class="memory-item-time">2天前</span>
+          <span class="memory-item-action">查看 ></span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function setTabBar(show){
+  document.getElementById('tab-bar').style.display=show?'flex':'none';
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-item svg').forEach(s=>s.setAttribute('stroke','#999'));
+  const item=document.querySelector(`.tab-item[data-tab="${tab}"]`);
+  if(item){item.classList.add('active');const svg=item.querySelector('svg');if(svg)svg.setAttribute('stroke','#000');}
+  if(tab==='discover'){showPage('page-discover');setTabBar(true);}
+  else if(tab==='profile'){showPage('page-profile');setTabBar(true);}
+  else if(tab==='market'||tab==='message'||tab==='publish'){
+    showPage('page-discover');setTabBar(true);
+    document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-item svg').forEach(s=>s.setAttribute('stroke','#999'));
+    document.querySelector('.tab-item[data-tab="discover"]').classList.add('active');
+    document.querySelector('.tab-item[data-tab="discover"] svg').setAttribute('stroke','#000');
+    alert('功能演示中...');
+  }
+}
+
+function switchProfileTab(tab){
+  document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  if(tab!=='collect')alert('该tab演示中，当前展示的是「收藏」回忆夹内容');
+}
+
+function openNote(id){
+  const n=notes.find(x=>x.id===id);if(!n)return;
+  currentNoteId=id;noteSource='discover';
+  document.getElementById('note-hero-img').src=n.img;
+  document.getElementById('note-content-title').textContent=n.title;
+  document.getElementById('note-content-body').textContent=n.body;
+  document.getElementById('note-author-avatar').src=n.avatar;
+  document.getElementById('note-author-name').textContent=n.author;
+  document.getElementById('note-content-tags').innerHTML=n.tags.map(t=>`<span class="note-content-tag">${t}</span>`).join('');
+  document.getElementById('note-content-tags').style.display='flex';
+  document.getElementById('note-ai-section').style.display='none';
+  const btn=document.getElementById('note-follow-btn');btn.textContent='关注';btn.classList.remove('following');
+  const cbtn=document.getElementById('note-collect-btn');
+  if(collectedIds.has(id)){
+    cbtn.style.background='#ccc';cbtn.disabled=true;cbtn.style.cursor='default';
+    document.getElementById('note-collect-text').textContent='已收藏';
+  }else{
+    cbtn.style.background='#FF2442';cbtn.disabled=false;cbtn.style.cursor='pointer';
+    document.getElementById('note-collect-text').textContent='收藏';
+  }
+  showPage('page-note');setTabBar(false);
+}
+
+function openMemory(id){
+  const n=memoryNotes.find(x=>x.id===id);if(!n)return;
+  noteSource='memory';
+  document.getElementById('note-hero-img').src=n.img;
+  document.getElementById('note-content-title').textContent=n.title;
+  document.getElementById('note-content-body').textContent=n.body;
+  document.getElementById('note-author-avatar').src=n.avatar;
+  document.getElementById('note-author-name').textContent=n.author;
+  document.getElementById('note-content-tags').style.display='none';
+  const aiSection=document.getElementById('note-ai-section');aiSection.style.display='block';
+  document.getElementById('note-ai-tags').innerHTML=n.tags.map(t=>`<span class="note-content-tag" style="background:${t.h?'rgba(255,36,66,.08)':'#f5f5f5'};color:${t.h?'#FF2442':'#666'};font-weight:${t.h?'600':'400'}">${t.text}</span>`).join('');
+  const timeTag=n.tags.find(t=>['今天','本周末','近期','将来'].includes(t.text));
+  document.getElementById('note-ai-time').textContent=`⏰ 唤醒时间：${timeTag?timeTag.text:'未设置'}  ·  来自回忆夹 AI 整理`;
+  const btn=document.getElementById('note-follow-btn');btn.textContent='关注';btn.classList.remove('following');
+  const cbtn=document.getElementById('note-collect-btn');cbtn.style.background='#ccc';cbtn.disabled=true;cbtn.style.cursor='default';
+  document.getElementById('note-collect-text').textContent='已收藏';
+  showPage('page-note');setTabBar(false);
+}
+
+function backFromNote(){
+  if(noteSource==='memory'){showPage('page-memory');setTabBar(false);}
+  else{showPage('page-discover');setTabBar(true);}
+}
+
+function toggleFollow(){
+  const btn=document.getElementById('note-follow-btn');
+  if(btn.classList.contains('following')){btn.classList.remove('following');btn.textContent='关注';}
+  else{btn.classList.add('following');btn.textContent='已关注';}
+}
+
+function openSheet(){
+  document.getElementById('sheet-overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+  selectedIntent=null;selectedTime=null;
+  updateConfirm();
+  document.querySelectorAll('.intent-item').forEach(o=>o.classList.remove('selected'));
+  document.querySelectorAll('.time-chip').forEach(c=>c.classList.remove('selected'));
+}
+
+function closeSheet(){
+  document.getElementById('sheet-overlay').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+}
+
+function selectIntent(el){
+  document.querySelectorAll('.intent-item').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');selectedIntent=el.dataset.intent;updateConfirm();
+}
+
+function selectTime(el){
+  document.querySelectorAll('.time-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');selectedTime=el.dataset.time;updateConfirm();
+}
+
+function updateConfirm(){
+  document.getElementById('sheet-confirm').disabled=!(selectedIntent&&selectedTime);
+}
+
+function confirmCollect(){
+  closeSheet();showPage('page-ai');setTabBar(false);
+  const tags=['提取关键词...','分析收藏意图...','关联时间场景...','生成记忆卡片...','完成！'];
+  const c=document.getElementById('ai-tags');c.innerHTML='';
+  tags.forEach((t,i)=>setTimeout(()=>{
+    const e=document.createElement('div');e.className='ai-tag';e.textContent=t;e.style.animationDelay='0s';c.appendChild(e);
+  },i*500));
+  setTimeout(()=>{
+    if(currentNoteId&&!collectedIds.has(currentNoteId)){
+      collectedIds.add(currentNoteId);
+      const n=notes.find(x=>x.id===currentNoteId);
+      if(n){
+        const intentMap={'plan':'计划去做','buy':'想买','learn':'学习参考','inspire':'灵感记录'};
+        const timeMap={'today':'今天','weekend':'本周末','soon':'近期','future':'将来'};
+        memoryNotes.unshift({
+          id:100+currentNoteId,
+          title:n.title,
+          tags:[
+            {text:intentMap[selectedIntent]||'已收藏',h:true},
+            {text:timeMap[selectedTime]||'近期'},
+            ...n.tags.map(t=>({text:t}))
+          ],
+          img:n.img,author:n.author,avatar:n.avatar,likes:n.likes,body:n.body,
+          keywords:[...n.tags,intentMap[selectedIntent],timeMap[selectedTime]],
+          matchDesc:`标记为"${intentMap[selectedIntent]||'已收藏'}"，时间"${timeMap[selectedTime]||'近期'}"，与搜索场景高度相关。`
+        });
+        initMemoryList();initProfileWaterfall();
+      }
+    }
+    showPage('page-memory');setTabBar(false);
+    document.getElementById('profile-dot').style.display='inline-block';
+  },3200);
+}
+
+function goMemory(){showPage('page-memory');setTabBar(false);}
+
+function goSearch(src='memory'){
+  searchSource=src;
+  showPage('page-search');setTabBar(false);
+}
+
+function backToProfile(){showPage('page-profile');setTabBar(true);}
+
+function backToMemory(){
+  if(searchSource==='discover'){showPage('page-discover');setTabBar(true);}
+  else{showPage('page-memory');setTabBar(false);}
+}
+
+function backToSearch(){showPage('page-search');setTabBar(false);}
+
+function quickSearch(q){document.getElementById('search-input').value=q;doSearch();}
+
+function doSearch(){
+  const q=document.getElementById('search-input').value.trim();if(!q)return;
+  document.getElementById('result-query').textContent=q;
+
+  const matched=memoryNotes.map(n=>{
+    let score=0;
+    const qLower=q.toLowerCase();
+    n.keywords.forEach(k=>{if(qLower.includes(k.toLowerCase()))score+=1;});
+    if(qLower.includes(n.title.toLowerCase()))score+=2;
+    n.tags.forEach(t=>{if(qLower.includes(t.text.toLowerCase()))score+=1;});
+    return {...n,score};
+  }).filter(n=>n.score>0).sort((a,b)=>b.score-a.score);
+
+  if(matched.length>0){
+    const top=matched[0];
+    let insight=`找到 ${matched.length} 条与"${q}"相关的记忆。`;
+    if(top.tags.some(t=>t.h)){
+      const intentTag=top.tags.find(t=>t.h);
+      insight+=`最相关的是标记为"${intentTag.text}"的「${top.title}」。`;
+    }
+    document.getElementById('result-insight-text').textContent=insight;
+    document.getElementById('result-list').innerHTML=matched.map((n,i)=>`
+      <div class="result-card">
+        <div class="result-card-header">
+          <span class="result-card-title">${n.title}</span>
+          <span class="result-match">${Math.max(95-i*8,60)}% 匹配</span>
+        </div>
+        <div class="result-card-desc">${n.matchDesc}</div>
+      </div>
+    `).join('');
+  }else{
+    document.getElementById('result-insight-text').textContent=`未找到与"${q}"直接相关的记忆。试试搜索"美食"、"旅行"、"礼物"等关键词？`;
+    document.getElementById('result-list').innerHTML=`
+      <div class="result-card" style="text-align:center;padding:30px;color:#999">
+        <div style="font-size:40px;margin-bottom:10px">🔍</div>
+        <div style="font-size:14px">没有找到相关记忆</div>
+        <div style="font-size:12px;margin-top:6px">试试「美食」「旅行」「礼物」「穿搭」</div>
+      </div>
+    `;
+  }
+  showPage('page-result');setTabBar(false);
+}
+
+function goWake(){
+  showPage('page-wake');setTabBar(false);
+}
+
+init();
+</script>
+</body>
+</html>
