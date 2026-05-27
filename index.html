@@ -43,7 +43,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 .subnav-item.active{color:#333;font-weight:600}
 .subnav-arrow{padding:0 12px;display:flex;align-items:center}
 .waterfall{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 8px 100px}
-.note-card{background:#fff;border-radius:12px;overflow:hidden;cursor:pointer;break-inside:avoid}
+.note-card{background:#fff;border-radius:12px;overflow:hidden;cursor:pointer;break-inside:avoid;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .note-card-img{width:100%;position:relative;background:#f0f0f0;overflow:hidden}
 .note-card-img img{width:100%;display:block;object-fit:cover}
 .note-card-info{padding:8px 8px 10px}
@@ -444,7 +444,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
   </div>
   <div class="profile-content">
     <!-- 不吃灰入口 -->
-    <div class="memory-entry" onclick="goMemory()">
+    <div class="memory-entry" id="memory-entry">
       <div class="memory-entry-bg"></div>
       <div class="memory-entry-content">
         <div class="memory-entry-top">
@@ -677,22 +677,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
   <div class="sheet-handle"></div>
   <div class="sheet-title">选择收藏意图（可多选）</div>
   <div class="intent-grid">
-    <div class="intent-item" data-intent="plan" onclick="selectIntent(this)">
+    <div class="intent-item" data-intent="plan">
       <div class="intent-emoji">📅</div>
       <div class="intent-name">计划去做</div>
       <div class="intent-desc">餐厅、景点等</div>
     </div>
-    <div class="intent-item" data-intent="buy" onclick="selectIntent(this)">
+    <div class="intent-item" data-intent="buy">
       <div class="intent-emoji">🛍️</div>
       <div class="intent-name">想买</div>
       <div class="intent-desc">商品推荐</div>
     </div>
-    <div class="intent-item" data-intent="learn" onclick="selectIntent(this)">
+    <div class="intent-item" data-intent="learn">
       <div class="intent-emoji">📖</div>
       <div class="intent-name">学习参考</div>
       <div class="intent-desc">教程干货</div>
     </div>
-    <div class="intent-item" data-intent="inspire" onclick="selectIntent(this)">
+    <div class="intent-item" data-intent="inspire">
       <div class="intent-emoji">💡</div>
       <div class="intent-name">灵感记录</div>
       <div class="intent-desc">创意搭配</div>
@@ -700,12 +700,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
   </div>
   <div class="sheet-subtitle">预计什么时候用到？（可多选）</div>
   <div class="time-row">
-    <div class="time-chip" data-time="today" onclick="selectTime(this)">今天</div>
-    <div class="time-chip" data-time="weekend" onclick="selectTime(this)">本周末</div>
-    <div class="time-chip" data-time="soon" onclick="selectTime(this)">近期</div>
-    <div class="time-chip" data-time="future" onclick="selectTime(this)">将来</div>
+    <div class="time-chip" data-time="today">今天</div>
+    <div class="time-chip" data-time="weekend">本周末</div>
+    <div class="time-chip" data-time="soon">近期</div>
+    <div class="time-chip" data-time="future">将来</div>
   </div>
-  <button class="sheet-confirm" id="sheet-confirm" onclick="confirmCollect()" disabled>确认收藏</button>
+  <button class="sheet-confirm" id="sheet-confirm" disabled>确认收藏</button>
 </div>
 
 </div>
@@ -734,7 +734,7 @@ function imgError(el){el.style.display='none';el.parentElement.style.background=
 function init(){
   const wf=document.getElementById('waterfall');
   wf.innerHTML=notes.map((n,i)=>`
-    <div class="note-card" onclick="openNote(${n.id})">
+    <div class="note-card" data-note-id="${n.id}">
       <div class="note-card-img" style="padding-bottom:${i%2===0?'130%':'100%'};height:0;">
         <img src="${n.img}" style="position:absolute;top:0;left:0;width:100%;height:100%;" alt="${n.title}" onerror="imgError(this)">
       </div>
@@ -756,13 +756,14 @@ function init(){
   initProfileWaterfall();
   initMemoryList();
   showGuideIfFirst();
+  bindEventDelegation();
 }
 
 function initProfileWaterfall(){
   const pw=document.getElementById('profile-waterfall');
   if(!pw)return;
   pw.innerHTML=memoryNotes.map((n,i)=>`
-    <div class="note-card" onclick="openMemory(${n.id})">
+    <div class="note-card" data-note-id="${n.id}">
       <div class="note-card-img" style="padding-bottom:${i%2===0?'120%':'100%'};height:0;">
         <img src="${n.img}" style="position:absolute;top:0;left:0;width:100%;height:100%;" alt="">
       </div>
@@ -787,7 +788,7 @@ function initMemoryList(){
   const ml=document.getElementById('memory-list');
   if(!ml)return;
   ml.innerHTML=memoryNotes.map(n=>`
-    <div class="memory-item" onclick="openMemory(${n.id})">
+    <div class="memory-item" data-note-id="${n.id}">
       <img class="memory-item-img" src="${n.img}" alt="">
       <div class="memory-item-body">
         <div class="memory-item-title">${n.title}</div>
@@ -801,6 +802,48 @@ function initMemoryList(){
       </div>
     </div>
   `).join('');
+}
+
+function bindEventDelegation(){
+  const wf=document.getElementById('waterfall');
+  if(wf){
+    wf.addEventListener('click',function(e){
+      const card=e.target.closest('.note-card');
+      if(card){const id=parseInt(card.dataset.noteId);if(id)openNote(id);}
+    });
+  }
+  const pwf=document.getElementById('profile-waterfall');
+  if(pwf){
+    pwf.addEventListener('click',function(e){
+      const card=e.target.closest('.note-card');
+      if(card){const id=parseInt(card.dataset.noteId);if(id)openMemory(id);}
+    });
+  }
+  const ml=document.getElementById('memory-list');
+  if(ml){
+    ml.addEventListener('click',function(e){
+      const item=e.target.closest('.memory-item');
+      if(item){const id=parseInt(item.dataset.noteId);if(id)openMemory(id);}
+    });
+  }
+  const ig=document.querySelector('.intent-grid');
+  if(ig){
+    ig.addEventListener('click',function(e){
+      const item=e.target.closest('.intent-item');
+      if(item)selectIntent(item);
+    });
+  }
+  const tr=document.querySelector('.time-row');
+  if(tr){
+    tr.addEventListener('click',function(e){
+      const chip=e.target.closest('.time-chip');
+      if(chip)selectTime(chip);
+    });
+  }
+  const sc=document.getElementById('sheet-confirm');
+  if(sc)sc.addEventListener('click',confirmCollect);
+  const me=document.querySelector('.memory-entry');
+  if(me)me.addEventListener('click',goMemory);
 }
 
 function showPage(id){
