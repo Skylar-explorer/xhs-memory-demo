@@ -1026,9 +1026,15 @@ const guideSteps=[
 let guideIndex=0;
 
 function showGuideIfFirst(){
-  if(localStorage.getItem('xhs-memory-guide-v2'))return;
-  document.getElementById('guide-overlay').classList.add('show');
-  document.getElementById('guide-modal').classList.add('show');
+  let seen=false;
+  try{seen=localStorage.getItem('xhs-memory-guide-v2');}catch(e){}
+  if(seen)return;
+  setTimeout(()=>{
+    const o=document.getElementById('guide-overlay');
+    const m=document.getElementById('guide-modal');
+    if(o)o.classList.add('show');
+    if(m)m.classList.add('show');
+  },600);
 }
 
 function nextGuide(){
@@ -1043,9 +1049,11 @@ function nextGuide(){
 }
 
 function closeGuide(){
-  document.getElementById('guide-overlay').classList.remove('show');
-  document.getElementById('guide-modal').classList.remove('show');
-  localStorage.setItem('xhs-memory-guide-v2','1');
+  const o=document.getElementById('guide-overlay');
+  const m=document.getElementById('guide-modal');
+  if(o)o.classList.remove('show');
+  if(m)m.classList.remove('show');
+  try{localStorage.setItem('xhs-memory-guide-v2','1');}catch(e){}
 }
 
 init();
