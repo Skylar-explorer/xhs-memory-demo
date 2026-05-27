@@ -1026,7 +1026,7 @@ const guideSteps=[
 let guideIndex=0;
 
 function showGuideIfFirst(){
-  if(localStorage.getItem('xhs-memory-guide'))return;
+  if(localStorage.getItem('xhs-memory-guide-v2'))return;
   document.getElementById('guide-overlay').classList.add('show');
   document.getElementById('guide-modal').classList.add('show');
 }
@@ -1045,7 +1045,7 @@ function nextGuide(){
 function closeGuide(){
   document.getElementById('guide-overlay').classList.remove('show');
   document.getElementById('guide-modal').classList.remove('show');
-  localStorage.setItem('xhs-memory-guide','1');
+  localStorage.setItem('xhs-memory-guide-v2','1');
 }
 
 init();
