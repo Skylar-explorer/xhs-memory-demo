@@ -97,6 +97,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 .sheet-confirm{width:100%;background:#FF2442;color:#fff;border:none;padding:13px;border-radius:24px;font-size:15px;font-weight:600;cursor:pointer}
 .sheet-confirm:disabled{background:#ccc;cursor:not-allowed}
 
+/* ===== 首次引导弹窗 ===== */
+.guide-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:300;display:none;opacity:0;transition:opacity .3s;backdrop-filter:blur(4px)}
+.guide-overlay.show{display:block;opacity:1}
+.guide-modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.92);width:310px;background:#fff;border-radius:24px;padding:28px 24px 24px;text-align:center;z-index:301;opacity:0;transition:all .35s cubic-bezier(.25,.46,.45,.94)}
+.guide-modal.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.guide-emoji{font-size:48px;margin-bottom:12px}
+.guide-title{font-size:20px;font-weight:700;color:#1a1a2e;margin-bottom:8px;letter-spacing:-.3px}
+.guide-text{font-size:14px;color:#555;line-height:1.7;margin-bottom:20px}
+.guide-text strong{color:#FF2442;font-weight:600}
+.guide-btn{width:100%;background:#1a1a2e;color:#fff;border:none;padding:14px;border-radius:16px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:background .2s}
+.guide-btn:active{background:#333}
+.guide-skip{font-size:13px;color:#999;cursor:pointer;background:none;border:none}
+.guide-steps{display:flex;justify-content:center;gap:6px;margin-bottom:20px}
+.guide-step{width:8px;height:8px;border-radius:50%;background:#eee;transition:background .3s}
+.guide-step.active{background:#1a1a2e}
+
 /* ===== AI处理页 ===== */
 .ai-page{background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:40px}
 .ai-orb{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,100,150,.8),rgba(100,80,200,.6),rgba(50,50,150,.4));box-shadow:0 0 50px rgba(120,80,220,.5);animation:orbPulse 2.5s ease-in-out infinite;margin-bottom:28px;position:relative}
@@ -643,6 +659,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
   </div>
 </div>
 
+<!-- ===== 首次引导弹窗 ===== -->
+<div class="guide-overlay" id="guide-overlay" onclick="closeGuide()"></div>
+<div class="guide-modal" id="guide-modal">
+  <div class="guide-emoji" id="guide-emoji">✦</div>
+  <div class="guide-title" id="guide-title">欢迎来到不吃灰</div>
+  <div class="guide-steps"><div class="guide-step active"></div><div class="guide-step"></div><div class="guide-step"></div></div>
+  <div class="guide-text" id="guide-text">你的收藏正在吃灰吗？<br>我们让每一条收藏都有<strong>意义</strong>和<strong>唤醒时间</strong>。</div>
+  <button class="guide-btn" id="guide-btn" onclick="nextGuide()">下一步</button>
+  <button class="guide-skip" onclick="closeGuide()">跳过引导</button>
+</div>
+
 <!-- ===== 收藏弹窗 ===== -->
 <div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
@@ -701,18 +728,20 @@ const memoryNotes=[
 let selectedIntent=null,selectedTime=null,searchSource='memory',noteSource='discover',currentNoteId=null;
 const collectedIds=new Set();
 
+function imgError(el){el.style.display='none';el.parentElement.style.background='linear-gradient(135deg,#f5f5f7,#e8e8ed)';const t=document.createElement('div');t.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#999;padding:20px;text-align:center;';t.textContent=el.alt||'图片加载中...';el.parentElement.appendChild(t);}
+
 function init(){
   const wf=document.getElementById('waterfall');
   wf.innerHTML=notes.map((n,i)=>`
     <div class="note-card" onclick="openNote(${n.id})">
       <div class="note-card-img" style="padding-bottom:${i%2===0?'130%':'100%'};height:0;">
-        <img src="${n.img}" style="position:absolute;top:0;left:0;width:100%;height:100%;" alt="">
+        <img src="${n.img}" style="position:absolute;top:0;left:0;width:100%;height:100%;" alt="${n.title}" onerror="imgError(this)">
       </div>
       <div class="note-card-info">
         <div class="note-card-title">${n.title}</div>
         <div class="note-card-meta">
           <div class="note-card-author">
-            <img class="note-card-avatar" src="${n.avatar}" alt="">
+            <img class="note-card-avatar" src="${n.avatar}" alt="" onerror="this.style.display='none'">
             <span class="note-card-name">${n.author}</span>
           </div>
           <div class="note-card-likes">
@@ -725,6 +754,7 @@ function init(){
   `).join('');
   initProfileWaterfall();
   initMemoryList();
+  showGuideIfFirst();
 }
 
 function initProfileWaterfall(){
@@ -982,6 +1012,37 @@ function doSearch(){
 
 function goWake(){
   showPage('page-wake');setTabBar(false);
+}
+
+/* ===== 引导逻辑 ===== */
+const guideSteps=[
+  {emoji:'✦',title:'欢迎来到不吃灰',text:'你的收藏正在吃灰吗？<br>我们让每一条收藏都有<strong>意义</strong>和<strong>唤醒时间</strong>。'},
+  {emoji:'📌',title:'三步上手',text:'1️⃣ 首页点开任意笔记<br>2️⃣ 点击<strong>收藏</strong>，选择意图标签<br>3️⃣ AI 自动整理到「不吃灰」'},
+  {emoji:'🎯',title:'去试试看吧',text:'点击首页的笔记卡片，<br>收藏一篇，体验完整闭环。'}
+];
+let guideIndex=0;
+
+function showGuideIfFirst(){
+  if(localStorage.getItem('xhs-memory-guide'))return;
+  document.getElementById('guide-overlay').classList.add('show');
+  document.getElementById('guide-modal').classList.add('show');
+}
+
+function nextGuide(){
+  guideIndex++;
+  if(guideIndex>=guideSteps.length){closeGuide();return;}
+  const s=guideSteps[guideIndex];
+  document.getElementById('guide-emoji').textContent=s.emoji;
+  document.getElementById('guide-title').textContent=s.title;
+  document.getElementById('guide-text').innerHTML=s.text;
+  document.querySelectorAll('.guide-step').forEach((el,i)=>el.classList.toggle('active',i===guideIndex));
+  if(guideIndex===guideSteps.length-1)document.getElementById('guide-btn').textContent='开始体验';
+}
+
+function closeGuide(){
+  document.getElementById('guide-overlay').classList.remove('show');
+  document.getElementById('guide-modal').classList.remove('show');
+  localStorage.setItem('xhs-memory-guide','1');
 }
 
 init();
