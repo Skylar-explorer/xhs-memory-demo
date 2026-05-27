@@ -675,7 +675,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 <div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">选择收藏意图</div>
+  <div class="sheet-title">选择收藏意图（可多选）</div>
   <div class="intent-grid">
     <div class="intent-item" data-intent="plan" onclick="selectIntent(this)">
       <div class="intent-emoji">📅</div>
@@ -698,7 +698,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
       <div class="intent-desc">创意搭配</div>
     </div>
   </div>
-  <div class="sheet-subtitle">预计什么时候用到？</div>
+  <div class="sheet-subtitle">预计什么时候用到？（可多选）</div>
   <div class="time-row">
     <div class="time-chip" data-time="today" onclick="selectTime(this)">今天</div>
     <div class="time-chip" data-time="weekend" onclick="selectTime(this)">本周末</div>
@@ -726,7 +726,7 @@ const memoryNotes=[
   {id:4,title:"早秋小个子穿搭",tags:[{text:"灵感记录",h:true},{text:"近期"},{text:"穿搭"}],img:"https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=300&fit=crop",author:"时尚日记",avatar:"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",likes:"892",body:"分享5套早秋look，都是基础款搭配，重点在比例和层次感。",keywords:["穿搭","秋季","小个子","衣服","时尚","口红","显白","美妆","肤色","色号"],matchDesc:"标记为\"灵感记录\"，时间\"近期\"。包含 5 套早秋 look，适合 155-160cm 身高。"},
 ];
 
-let selectedIntent=null,selectedTime=null,searchSource='memory',noteSource='discover',currentNoteId=null;
+const selectedIntents=new Set();const selectedTimes=new Set();let searchSource='memory',noteSource='discover',currentNoteId=null;
 const collectedIds=new Set();
 
 function imgError(el){el.style.display='none';el.parentElement.style.background='linear-gradient(135deg,#f5f5f7,#e8e8ed)';const t=document.createElement('div');t.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#999;padding:20px;text-align:center;';t.textContent=el.alt||'图片加载中...';el.parentElement.appendChild(t);}
@@ -891,7 +891,7 @@ function toggleFollow(){
 function openSheet(){
   document.getElementById('sheet-overlay').classList.add('show');
   document.getElementById('sheet').classList.add('show');
-  selectedIntent=null;selectedTime=null;
+  selectedIntents.clear();selectedTimes.clear();
   updateConfirm();
   document.querySelectorAll('.intent-item').forEach(o=>o.classList.remove('selected'));
   document.querySelectorAll('.time-chip').forEach(c=>c.classList.remove('selected'));
@@ -903,17 +903,21 @@ function closeSheet(){
 }
 
 function selectIntent(el){
-  document.querySelectorAll('.intent-item').forEach(o=>o.classList.remove('selected'));
-  el.classList.add('selected');selectedIntent=el.dataset.intent;updateConfirm();
+  const key=el.dataset.intent;
+  if(selectedIntents.has(key)){selectedIntents.delete(key);el.classList.remove('selected');}
+  else{selectedIntents.add(key);el.classList.add('selected');}
+  updateConfirm();
 }
 
 function selectTime(el){
-  document.querySelectorAll('.time-chip').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');selectedTime=el.dataset.time;updateConfirm();
+  const key=el.dataset.time;
+  if(selectedTimes.has(key)){selectedTimes.delete(key);el.classList.remove('selected');}
+  else{selectedTimes.add(key);el.classList.add('selected');}
+  updateConfirm();
 }
 
 function updateConfirm(){
-  document.getElementById('sheet-confirm').disabled=!(selectedIntent&&selectedTime);
+  document.getElementById('sheet-confirm').disabled=!(selectedIntents.size>0&&selectedTimes.size>0);
 }
 
 function confirmCollect(){
@@ -930,17 +934,15 @@ function confirmCollect(){
       if(n){
         const intentMap={'plan':'计划去做','buy':'想买','learn':'学习参考','inspire':'灵感记录'};
         const timeMap={'today':'今天','weekend':'本周末','soon':'近期','future':'将来'};
+        const intentTags=[...selectedIntents].map(k=>({text:intentMap[k]||k,h:true}));
+        const timeTags=[...selectedTimes].map(k=>({text:timeMap[k]||k}));
         memoryNotes.unshift({
           id:100+currentNoteId,
           title:n.title,
-          tags:[
-            {text:intentMap[selectedIntent]||'已收藏',h:true},
-            {text:timeMap[selectedTime]||'近期'},
-            ...n.tags.map(t=>({text:t}))
-          ],
+          tags:[...intentTags,...timeTags,...n.tags.map(t=>({text:t}))],
           img:n.img,author:n.author,avatar:n.avatar,likes:n.likes,body:n.body,
-          keywords:[...n.tags,intentMap[selectedIntent],timeMap[selectedTime]],
-          matchDesc:`标记为"${intentMap[selectedIntent]||'已收藏'}"，时间"${timeMap[selectedTime]||'近期'}"，与搜索场景高度相关。`
+          keywords:[...n.tags,...[...selectedIntents].map(k=>intentMap[k]),...[...selectedTimes].map(k=>timeMap[k])],
+          matchDesc:`标记为"${[...selectedIntents].map(k=>intentMap[k]).join('、')}"，时间"${[...selectedTimes].map(k=>timeMap[k]).join('、')}"，与搜索场景高度相关。`
         });
         initMemoryList();initProfileWaterfall();
       }
