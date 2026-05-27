@@ -805,45 +805,26 @@ function initMemoryList(){
 }
 
 function bindEventDelegation(){
-  const wf=document.getElementById('waterfall');
-  if(wf){
-    wf.addEventListener('click',function(e){
-      const card=e.target.closest('.note-card');
-      if(card){const id=parseInt(card.dataset.noteId);if(id)openNote(id);}
-    });
+  function onTap(el,sel,cb){
+    if(!el)return;
+    el.addEventListener('click',function(e){const t=e.target.closest(sel);if(t)cb(t,e);});
+    el.addEventListener('touchstart',function(e){const t=e.target.closest(sel);if(t){e.preventDefault();cb(t,e);}},{passive:false});
   }
-  const pwf=document.getElementById('profile-waterfall');
-  if(pwf){
-    pwf.addEventListener('click',function(e){
-      const card=e.target.closest('.note-card');
-      if(card){const id=parseInt(card.dataset.noteId);if(id)openMemory(id);}
-    });
-  }
-  const ml=document.getElementById('memory-list');
-  if(ml){
-    ml.addEventListener('click',function(e){
-      const item=e.target.closest('.memory-item');
-      if(item){const id=parseInt(item.dataset.noteId);if(id)openMemory(id);}
-    });
-  }
-  const ig=document.querySelector('.intent-grid');
-  if(ig){
-    ig.addEventListener('click',function(e){
-      const item=e.target.closest('.intent-item');
-      if(item)selectIntent(item);
-    });
-  }
-  const tr=document.querySelector('.time-row');
-  if(tr){
-    tr.addEventListener('click',function(e){
-      const chip=e.target.closest('.time-chip');
-      if(chip)selectTime(chip);
-    });
-  }
+  onTap(document.getElementById('waterfall'),'.note-card',function(card){const id=parseInt(card.dataset.noteId);if(id)openNote(id);});
+  onTap(document.getElementById('profile-waterfall'),'.note-card',function(card){const id=parseInt(card.dataset.noteId);if(id)openMemory(id);});
+  onTap(document.getElementById('memory-list'),'.memory-item',function(item){const id=parseInt(item.dataset.noteId);if(id)openMemory(id);});
+  onTap(document.querySelector('.intent-grid'),'.intent-item',function(item){selectIntent(item);});
+  onTap(document.querySelector('.time-row'),'.time-chip',function(chip){selectTime(chip);});
   const sc=document.getElementById('sheet-confirm');
-  if(sc)sc.addEventListener('click',confirmCollect);
+  if(sc){
+    sc.addEventListener('click',confirmCollect);
+    sc.addEventListener('touchstart',function(e){e.preventDefault();confirmCollect();},{passive:false});
+  }
   const me=document.querySelector('.memory-entry');
-  if(me)me.addEventListener('click',goMemory);
+  if(me){
+    me.addEventListener('click',goMemory);
+    me.addEventListener('touchstart',function(e){e.preventDefault();goMemory();},{passive:false});
+  }
 }
 
 function showPage(id){
@@ -1070,7 +1051,7 @@ let guideIndex=0;
 
 function showGuideIfFirst(){
   let seen=false;
-  try{seen=localStorage.getItem('xhs-memory-guide-v2');}catch(e){}
+  try{seen=localStorage.getItem('xhs-memory-guide-v3');}catch(e){}
   if(seen)return;
   setTimeout(()=>{
     const o=document.getElementById('guide-overlay');
@@ -1096,7 +1077,7 @@ function closeGuide(){
   const m=document.getElementById('guide-modal');
   if(o)o.classList.remove('show');
   if(m)m.classList.remove('show');
-  try{localStorage.setItem('xhs-memory-guide-v2','1');}catch(e){}
+  try{localStorage.setItem('xhs-memory-guide-v3','1');}catch(e){}
 }
 
 init();
