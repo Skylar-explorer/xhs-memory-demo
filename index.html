@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>回忆夹 - AI记忆助手</title>
+<title>不吃灰 - AI记忆助手</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#0f0f23;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 0}
@@ -140,17 +140,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 .profile-action-title{font-size:13px;font-weight:500;margin-bottom:2px}
 .profile-action-desc{font-size:11px;color:rgba(255,255,255,.7)}
 
-/* 回忆夹入口 */
-.memory-entry{background:linear-gradient(135deg,#FF2442,#ff6b8a);border-radius:14px;padding:16px;margin:14px 20px;color:#fff;cursor:pointer;position:relative;overflow:hidden}
-.memory-entry::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.1);border-radius:50%}
-.memory-entry-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;position:relative;z-index:1}
-.memory-entry-title{font-size:16px;font-weight:700}
-.memory-entry-badge{background:rgba(255,255,255,.25);padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600}
-.memory-entry-desc{font-size:13px;opacity:.9;margin-bottom:10px;position:relative;z-index:1}
-.memory-entry-stats{display:flex;gap:16px;position:relative;z-index:1}
-.memory-entry-stat{display:flex;align-items:baseline;gap:3px}
-.memory-entry-num{font-size:20px;font-weight:700}
-.memory-entry-label{font-size:12px;opacity:.85}
+/* 不吃灰入口 */
+.memory-entry{background:linear-gradient(135deg,#1a1a2e 0%,#2d1b4e 50%,#1a1a2e 100%);border-radius:20px;padding:20px;margin:16px 20px;color:#fff;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(26,26,46,.25)}
+.memory-entry-bg{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at top right,rgba(255,36,66,.15) 0%,transparent 60%),radial-gradient(ellipse at bottom left,rgba(102,126,234,.1) 0%,transparent 50%)}
+.memory-entry-content{position:relative;z-index:1}
+.memory-entry-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.memory-entry-brand{display:flex;align-items:center;gap:10px}
+.memory-entry-icon{width:32px;height:32px;background:linear-gradient(135deg,#FF2442,#ff6b8a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;box-shadow:0 2px 8px rgba(255,36,66,.3)}
+.memory-entry-title{font-size:17px;font-weight:700;letter-spacing:.5px}
+.memory-entry-badge{background:rgba(255,255,255,.12);backdrop-filter:blur(10px);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.08)}
+.memory-entry-desc{font-size:13px;color:rgba(255,255,255,.65);margin-bottom:16px;line-height:1.5}
+.memory-entry-stats{display:flex;align-items:center;gap:0;position:relative}
+.memory-entry-stat{display:flex;align-items:baseline;gap:4px;padding:0 14px}
+.memory-entry-stat:first-child{padding-left:0}
+.memory-entry-stat:last-child{padding-right:0}
+.memory-entry-divider{width:1px;height:20px;background:rgba(255,255,255,.15)}
+.memory-entry-num{font-size:22px;font-weight:700;color:#fff}
+.memory-entry-label{font-size:12px;color:rgba(255,255,255,.55)}
 
 .profile-content{background:#fff;border-radius:20px 20px 0 0;margin-top:-16px;position:relative;z-index:3;padding-top:4px}
 .profile-tabs{display:flex;align-items:center;border-bottom:0.5px solid #f0f0f0;padding:0 8px}
@@ -163,62 +169,74 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 .profile-subtab.active{color:#333;font-weight:600}
 .profile-waterfall{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 8px 100px}
 
-/* ===== 回忆夹主页 ===== */
-.memory-page{background:#f8f8f8;padding-bottom:100px}
-.memory-top{position:sticky;top:0;z-index:50;background:#fff;padding:50px 16px 12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.memory-top-title{font-size:18px;font-weight:700}
-.memory-top-right{display:flex;gap:12px}
-.memory-top-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
-.memory-greeting{padding:16px 16px 4px}
-.memory-greeting-text{font-size:22px;font-weight:700;color:#333;margin-bottom:4px}
-.memory-greeting-sub{font-size:14px;color:#999}
+/* ===== 不吃灰主页 ===== */
+.memory-page{background:#f5f5f7;padding-bottom:120px}
+.memory-top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);padding:48px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,.04)}
+.memory-top-title{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.memory-top-right{display:flex;gap:8px}
+.memory-top-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:12px;transition:background .2s}
+.memory-top-btn:active{background:rgba(0,0,0,.05)}
+
+/* 问候区 */
+.memory-greeting{padding:20px 16px 8px}
+.memory-greeting-text{font-size:26px;font-weight:700;color:#1a1a2e;margin-bottom:6px;letter-spacing:-.5px}
+.memory-greeting-sub{font-size:14px;color:#8e8e93}
 
 /* 统计卡片 */
-.memory-stats{display:flex;gap:10px;padding:12px 16px}
-.memory-stat-card{flex:1;background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.memory-stat-num{font-size:24px;font-weight:700;color:#FF2442;margin-bottom:2px}
-.memory-stat-label{font-size:12px;color:#666}
+.memory-stats{display:flex;gap:12px;padding:12px 16px}
+.memory-stat-card{flex:1;background:#fff;border-radius:16px;padding:16px 12px;text-align:center;position:relative;overflow:hidden}
+.memory-stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#FF2442,#ff6b8a);border-radius:16px 16px 0 0}
+.memory-stat-num{font-size:28px;font-weight:700;color:#1a1a2e;margin-bottom:4px;letter-spacing:-.5px}
+.memory-stat-label{font-size:12px;color:#8e8e93;font-weight:500}
 
 /* 分类 */
-.memory-cats{display:flex;gap:10px;padding:8px 16px 16px;overflow-x:auto;scrollbar-width:none}
+.memory-cats{display:flex;gap:10px;padding:10px 16px 18px;overflow-x:auto;scrollbar-width:none}
 .memory-cats::-webkit-scrollbar{display:none}
-.memory-cat{min-width:80px;background:#fff;border-radius:14px;padding:14px 12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.04);cursor:pointer}
-.memory-cat-emoji{font-size:28px;margin-bottom:4px}
-.memory-cat-name{font-size:13px;font-weight:500}
-.memory-cat-count{font-size:11px;color:#999;margin-top:2px}
+.memory-cat{min-width:72px;background:#fff;border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;transition:transform .2s,box-shadow .2s;border:1px solid rgba(0,0,0,.04)}
+.memory-cat:active{transform:scale(.96)}
+.memory-cat-emoji{font-size:24px;margin-bottom:6px;display:block}
+.memory-cat-name{font-size:12px;font-weight:600;color:#1a1a2e}
+.memory-cat-count{font-size:11px;color:#8e8e93;margin-top:3px}
 
 /* 智能洞察 */
-.memory-insight{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:16px;margin:0 16px 16px;color:#fff}
-.memory-insight-header{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:14px;font-weight:600}
-.memory-insight-text{font-size:13px;line-height:1.6;opacity:.9}
-.memory-insight-action{margin-top:10px;background:rgba(255,255,255,.15);border:none;padding:8px 16px;border-radius:12px;color:#fff;font-size:13px;cursor:pointer}
+.memory-insight{background:#fff;border-radius:20px;padding:20px;margin:0 16px 16px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.04)}
+.memory-insight-accent{position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,#FF2442,#ff6b8a)}
+.memory-insight-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:14px;font-weight:700;color:#1a1a2e}
+.memory-insight-header-icon{width:24px;height:24px;background:rgba(255,36,66,.08);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.memory-insight-text{font-size:13px;line-height:1.7;color:#555}
+.memory-insight-action{margin-top:14px;background:#f5f5f7;border:none;padding:10px 18px;border-radius:12px;color:#1a1a2e;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;width:fit-content;transition:background .2s}
+.memory-insight-action:active{background:#eee}
 
 /* 待唤醒 */
-.memory-wake-banner{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;padding:16px;margin:0 16px 16px;color:#fff;cursor:pointer}
-.memory-wake-title{font-size:15px;font-weight:600;margin-bottom:4px}
-.memory-wake-desc{font-size:12px;opacity:.85}
+.memory-wake-banner{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:20px;margin:0 16px 16px;color:#fff;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(102,126,234,.25)}
+.memory-wake-banner::after{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:rgba(255,255,255,.06);border-radius:50%}
+.memory-wake-content{position:relative;z-index:1}
+.memory-wake-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-bottom:6px}
+.memory-wake-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.memory-wake-desc{font-size:13px;opacity:.85;line-height:1.5}
 
 /* 记忆列表 */
-.memory-section-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px}
-.memory-section-title{font-size:16px;font-weight:600}
-.memory-section-more{font-size:13px;color:#999}
+.memory-section-header{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px}
+.memory-section-title{font-size:18px;font-weight:700;color:#1a1a2e;letter-spacing:-.3px}
+.memory-section-more{font-size:13px;color:#8e8e93;font-weight:500;cursor:pointer}
 .memory-list{padding:0 16px}
-.memory-item{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.04);display:flex;gap:12px;cursor:pointer}
-.memory-item-img{width:80px;height:80px;border-radius:10px;object-fit:cover;background:#f0f0f0;flex-shrink:0}
-.memory-item-body{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
-.memory-item-title{font-size:14px;font-weight:600;color:#333;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
-.memory-item-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
-.memory-item-tag{background:#f0f0f0;color:#666;font-size:11px;padding:3px 10px;border-radius:10px}
+.memory-item{background:#fff;border-radius:18px;padding:16px;margin-bottom:12px;display:flex;gap:14px;cursor:pointer;transition:transform .2s,box-shadow .2s;border:1px solid rgba(0,0,0,.03)}
+.memory-item:active{transform:scale(.98)}
+.memory-item-img{width:88px;height:88px;border-radius:14px;object-fit:cover;background:#f0f0f0;flex-shrink:0}
+.memory-item-body{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0;padding:2px 0}
+.memory-item-title{font-size:15px;font-weight:600;color:#1a1a2e;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px;letter-spacing:-.2px}
+.memory-item-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.memory-item-tag{background:#f5f5f7;color:#555;font-size:11px;padding:4px 10px;border-radius:8px;font-weight:500}
 .memory-item-tag.highlight{background:rgba(255,36,66,.08);color:#FF2442}
 .memory-item-meta{display:flex;align-items:center;justify-content:space-between}
-.memory-item-time{font-size:12px;color:#999}
-.memory-item-action{font-size:12px;color:#FF2442;font-weight:500}
+.memory-item-time{font-size:12px;color:#8e8e93;font-weight:500}
+.memory-item-action{font-size:12px;color:#FF2442;font-weight:600;display:flex;align-items:center;gap:2px}
 
 /* 底部搜索 */
-.memory-search-bar{position:fixed;bottom:90px;left:16px;right:16px;height:48px;background:#fff;border-radius:24px;display:flex;align-items:center;padding:0 16px;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:90;max-width:358px;margin:0 auto}
-.memory-search-bar svg{flex-shrink:0}
-.memory-search-bar input{border:none;background:transparent;font-size:14px;outline:none;width:100%}
-.memory-search-bar input::placeholder{color:#999}
+.memory-search-bar{position:fixed;bottom:100px;left:16px;right:16px;height:52px;background:#fff;border-radius:26px;display:flex;align-items:center;padding:0 20px;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.08);z-index:90;max-width:358px;margin:0 auto;border:1px solid rgba(0,0,0,.04)}
+.memory-search-bar svg{flex-shrink:0;color:#8e8e93}
+.memory-search-bar input{border:none;background:transparent;font-size:15px;outline:none;width:100%;color:#1a1a2e}
+.memory-search-bar input::placeholder{color:#c7c7cc}
 
 /* ===== 搜索页 ===== */
 .search-page{padding:50px 16px 20px;background:#fff}
@@ -263,7 +281,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 </style>
 </head>
 <body>
-<div class="demo-title">回忆夹 - AI 记忆助手 Demo</div>
+<div class="demo-title">不吃灰 - AI 记忆助手 Demo</div>
 <div class="demo-sub">基于小红书框架的交互原型</div>
 
 <div class="phone">
@@ -352,7 +370,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 <div class="page ai-page" id="page-ai">
   <div class="ai-orb"></div>
   <div class="ai-title">AI 正在理解你的收藏...</div>
-  <div class="ai-subtitle">回忆夹会提取关键信息，生成结构化记忆</div>
+  <div class="ai-subtitle">不吃灰会提取关键信息，生成结构化记忆</div>
   <div class="ai-tags" id="ai-tags"></div>
   <div class="ai-bar"><div class="ai-bar-inner"></div></div>
 </div>
@@ -408,17 +426,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
     </div>
   </div>
   <div class="profile-content">
-    <!-- 回忆夹入口 -->
+    <!-- 不吃灰入口 -->
     <div class="memory-entry" onclick="goMemory()">
-      <div class="memory-entry-top">
-        <span class="memory-entry-title">🤖 回忆夹</span>
-        <span class="memory-entry-badge">AI 整理中</span>
-      </div>
-      <div class="memory-entry-desc">你的 AI 记忆助手，让收藏不再吃灰</div>
-      <div class="memory-entry-stats">
-        <div class="memory-entry-stat"><span class="memory-entry-num">23</span><span class="memory-entry-label">条记忆</span></div>
-        <div class="memory-entry-stat"><span class="memory-entry-num">5</span><span class="memory-entry-label">个分类</span></div>
-        <div class="memory-entry-stat"><span class="memory-entry-num">2</span><span class="memory-entry-label">条待唤醒</span></div>
+      <div class="memory-entry-bg"></div>
+      <div class="memory-entry-content">
+        <div class="memory-entry-top">
+          <div class="memory-entry-brand">
+            <div class="memory-entry-icon">✦</div>
+            <span class="memory-entry-title">不吃灰</span>
+          </div>
+          <span class="memory-entry-badge">AI 整理中</span>
+        </div>
+        <div class="memory-entry-desc">让收藏不再吃灰，AI 帮你记住为什么收藏</div>
+        <div class="memory-entry-stats">
+          <div class="memory-entry-stat"><span class="memory-entry-num">23</span><span class="memory-entry-label">条记忆</span></div>
+          <div class="memory-entry-divider"></div>
+          <div class="memory-entry-stat"><span class="memory-entry-num">5</span><span class="memory-entry-label">个分类</span></div>
+          <div class="memory-entry-divider"></div>
+          <div class="memory-entry-stat"><span class="memory-entry-num">2</span><span class="memory-entry-label">条待唤醒</span></div>
+        </div>
       </div>
     </div>
     <div class="profile-tabs">
@@ -438,14 +464,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
   </div>
 </div>
 
-<!-- ===== 回忆夹主页 ===== -->
+<!-- ===== 不吃灰主页 ===== -->
 <div class="page memory-page" id="page-memory">
   <div class="memory-top">
     <div style="display:flex;align-items:center;gap:10px">
       <div class="memory-top-btn" onclick="backToProfile()" style="margin-left:-8px">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
       </div>
-      <div class="memory-top-title">回忆夹</div>
+      <div class="memory-top-title">不吃灰</div>
     </div>
     <div class="memory-top-right">
       <div class="memory-top-btn" onclick="goSearch()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
@@ -453,7 +479,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
     </div>
   </div>
   <div class="memory-greeting">
-    <div class="memory-greeting-text">👋 早安，Skylar</div>
+    <div class="memory-greeting-text">早安，Skylar</div>
     <div class="memory-greeting-sub">今天有 2 条记忆待唤醒</div>
   </div>
   <div class="memory-stats">
@@ -479,22 +505,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
     <div class="memory-cat" onclick="alert('创建新分类演示')" style="border:1.5px dashed #ddd;background:transparent"><div class="memory-cat-emoji">➕</div><div class="memory-cat-name">创建</div><div class="memory-cat-count">新分类</div></div>
   </div>
   <div class="memory-insight">
-    <div class="memory-insight-header">💡 智能洞察</div>
+    <div class="memory-insight-accent"></div>
+    <div class="memory-insight-header">
+      <div class="memory-insight-header-icon">💡</div>
+      智能洞察
+    </div>
     <div class="memory-insight-text">你近期收藏了 3 家日式餐厅，都标记了"本周末"，建议提前预约。另外你收藏的生日礼物清单中的香薰蜡烛正在打折。</div>
-    <button class="memory-insight-action" onclick="goWake()">查看唤醒提醒 →</button>
+    <button class="memory-insight-action" onclick="goWake()">
+      查看唤醒提醒
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
   </div>
   <div class="memory-wake-banner" onclick="goWake()">
-    <div class="memory-wake-title">🔔 待唤醒记忆（2）</div>
-    <div class="memory-wake-desc">今天有雨 → 日式拉面店 | 好友生日倒计时 5 天 → 礼物清单</div>
+    <div class="memory-wake-content">
+      <div class="memory-wake-label">待唤醒</div>
+      <div class="memory-wake-title">今天有 2 条记忆值得 revisit</div>
+      <div class="memory-wake-desc">雨天适合吃热汤面 · 好友生日倒计时 5 天</div>
+    </div>
   </div>
   <div class="memory-section-header">
     <span class="memory-section-title">最近收藏</span>
-    <span class="memory-section-more">查看全部 ></span>
+    <span class="memory-section-more">查看全部</span>
   </div>
   <div class="memory-list" id="memory-list"></div>
   <div class="memory-search-bar" onclick="goSearch()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input type="text" placeholder="用自然语言搜索你的记忆..." readonly>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" placeholder="搜索你的收藏记忆..." readonly>
   </div>
 </div>
 
@@ -503,7 +539,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
   <div class="search-top">
     <div class="search-box">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input type="text" placeholder="搜索记忆..." id="search-input" onkeydown="if(event.key==='Enter')doSearch()">
+      <input type="text" placeholder="搜索不吃灰记忆..." id="search-input" onkeydown="if(event.key==='Enter')doSearch()">
     </div>
     <span class="search-cancel" onclick="backToMemory()">取消</span>
   </div>
@@ -765,7 +801,7 @@ function switchTab(tab){
 function switchProfileTab(tab){
   document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));
   event.target.classList.add('active');
-  if(tab!=='collect')alert('该tab演示中，当前展示的是「收藏」回忆夹内容');
+  if(tab!=='collect')alert('该tab演示中，当前展示的是「收藏」不吃灰内容');
 }
 
 function openNote(id){
@@ -803,7 +839,7 @@ function openMemory(id){
   const aiSection=document.getElementById('note-ai-section');aiSection.style.display='block';
   document.getElementById('note-ai-tags').innerHTML=n.tags.map(t=>`<span class="note-content-tag" style="background:${t.h?'rgba(255,36,66,.08)':'#f5f5f5'};color:${t.h?'#FF2442':'#666'};font-weight:${t.h?'600':'400'}">${t.text}</span>`).join('');
   const timeTag=n.tags.find(t=>['今天','本周末','近期','将来'].includes(t.text));
-  document.getElementById('note-ai-time').textContent=`⏰ 唤醒时间：${timeTag?timeTag.text:'未设置'}  ·  来自回忆夹 AI 整理`;
+  document.getElementById('note-ai-time').textContent=`⏰ 唤醒时间：${timeTag?timeTag.text:'未设置'}  ·  来自不吃灰 AI 整理`;
   const btn=document.getElementById('note-follow-btn');btn.textContent='关注';btn.classList.remove('following');
   const cbtn=document.getElementById('note-collect-btn');cbtn.style.background='#ccc';cbtn.disabled=true;cbtn.style.cursor='default';
   document.getElementById('note-collect-text').textContent='已收藏';
