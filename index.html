@@ -159,7 +159,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 
 /* 不吃灰入口 */
 .memory-entry{background:linear-gradient(135deg,#1a1a2e 0%,#2d1b4e 50%,#1a1a2e 100%);border-radius:20px;padding:20px;margin:16px 20px;color:#fff;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(26,26,46,.25)}
-.memory-entry-bg{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at top right,rgba(255,36,66,.15) 0%,transparent 60%),radial-gradient(ellipse at bottom left,rgba(102,126,234,.1) 0%,transparent 50%)}
+.memory-entry-bg{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at top right,rgba(255,36,66,.15) 0%,transparent 60%),radial-gradient(ellipse at bottom left,rgba(102,126,234,.1) 0%,transparent 50%);pointer-events:none}
 .memory-entry-content{position:relative;z-index:1}
 .memory-entry-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .memory-entry-brand{display:flex;align-items:center;gap:10px}
@@ -358,7 +358,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
           <span class="note-author-desc">小红书博主</span>
         </div>
       </div>
-      <button class="note-follow-btn" id="note-follow-btn" onclick="toggleFollow()">关注</button>
+      <button class="note-follow-btn" id="note-follow-btn" onclick="toggleFollow()">关注作者</button>
     </div>
   </div>
   <div class="note-bottom">
@@ -884,7 +884,7 @@ function backFromNote(){
 
 function toggleFollow(){
   const btn=document.getElementById('note-follow-btn');
-  if(btn.classList.contains('following')){btn.classList.remove('following');btn.textContent='关注';}
+  if(btn.classList.contains('following')){btn.classList.remove('following');btn.textContent='关注作者';}
   else{btn.classList.add('following');btn.textContent='已关注';}
 }
 
