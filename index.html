@@ -661,8 +661,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 </div>
 
 <!-- ===== 首次引导弹窗 ===== -->
-<div class="guide-overlay" id="guide-overlay" onclick="closeGuide()"></div>
-<div class="guide-modal" id="guide-modal">
+<div class="guide-overlay" id="guide-overlay" onclick="if(event.target===this)closeGuide()"></div>
+<div class="guide-modal" id="guide-modal" onclick="event.stopPropagation()">
   <div class="guide-emoji" id="guide-emoji">✦</div>
   <div class="guide-title" id="guide-title">欢迎来到不吃灰</div>
   <div class="guide-steps"><div class="guide-step active"></div><div class="guide-step"></div><div class="guide-step"></div></div>
