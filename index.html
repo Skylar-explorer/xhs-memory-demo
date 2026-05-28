@@ -444,7 +444,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
   </div>
   <div class="profile-content">
     <!-- 不吃灰入口 -->
-    <a class="memory-entry" id="memory-entry" href="javascript:void(0)" onclick="goMemory();return false;">
+    <div class="memory-entry" id="memory-entry" onclick="goMemory()">
       <div class="memory-entry-bg"></div>
       <div class="memory-entry-content">
         <div class="memory-entry-top">
@@ -463,7 +463,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
           <div class="memory-entry-stat"><span class="memory-entry-num">2</span><span class="memory-entry-label">条待唤醒</span></div>
         </div>
       </div>
-    </a>
+    </div>
     <div class="profile-tabs">
       <div class="profile-tab" onclick="switchProfileTab('notes')">笔记</div>
       <div class="profile-tab" onclick="switchProfileTab('comments')">🔒 评论</div>
