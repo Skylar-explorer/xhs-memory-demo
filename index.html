@@ -303,6 +303,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans G
 
 <div class="phone">
 <div class="screen">
+<div id="js-error" style="position:fixed;top:0;left:0;right:0;background:#FF2442;color:#fff;padding:8px 12px;font-size:12px;z-index:9999;display:none;font-family:monospace"></div>
 
 <!-- ===== 发现页 ===== -->
 <div class="page active" id="page-discover">
@@ -1099,6 +1100,14 @@ function closeGuide(){
   try{localStorage.setItem('xhs-memory-guide-v3','1');}catch(e){}
 }
 
+window.onerror=function(msg,url,line){
+  const el=document.getElementById('js-error');
+  if(el){el.style.display='block';el.textContent='JS Error: '+msg+' (line '+line+')';}
+};
+window.addEventListener('unhandledrejection',function(e){
+  const el=document.getElementById('js-error');
+  if(el){el.style.display='block';el.textContent='JS Error: '+e.reason;}
+});
 init();
 </script>
 </body>
